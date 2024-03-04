@@ -6,30 +6,29 @@ speed: float = 0.001
 gcode: str
 i: int = 0
 
-portname: str = None
 
-
-def port_select() -> list:
+def allPorts() -> dict:
     ports = serial.tools.list_ports.comports()
-    all_ports = []
+    all_ports: dict = {}
     if len(ports) > 0:
-        for port in ports:
-            all_ports.append(port)
+        for idx,port in enumerate(ports):
+
+            all_ports[idx] = port.name
         return all_ports
 
     else:
         print('No Ports Found or device not connected')
 
-"""
-Add ways to work with ports
-
-"""
-port_select()
-
-
-def openSerialPorts():
+def openSerialPorts(portname:str = None):
     if portname == None:
-        return
+        print("No ports Were Selected")
+    else:
+        print(f"Opening Serial port in : {portname}")
+        ser = serial.Serial(portname, 9600,timeout=1)
+        return ser
+
+
+
 
 # with serial.Serial('COM4', 9600, timeout=1) as ser:
 #    x = ser.read()          # read one byte
