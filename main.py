@@ -118,8 +118,7 @@ def send_gcode(filename, port):
         print('Starting Serial Port at ')
         port.open()
 
-    if not streaming:
-        return
+
 
     try:
         # Discard the first three lines from the serial port
@@ -130,32 +129,34 @@ def send_gcode(filename, port):
         with open(filename, 'r') as file:
             command_terminal_text.config(text=f'Running {filename.split("/")[-1]}')
             # Read each line from the file
-            if streaming:
-                for idx, line in enumerate(file, start=1):
-                    # Send the G-code line through serial port
-                    port.write(line.encode())
-                    sent = f"Sent: {line.strip()}"
 
-                    # Wait for response containing "ok"
-                    response = b""
-                    while b"ok" not in response:
-                        chunk = port.read(port.in_waiting or 1)
-                        if chunk:
-                            response += chunk
+            for idx, line in enumerate(file, start=1):
+                # Send the G-code line through serial port
+                if not streaming:
+                    break
+                port.write(line.encode())
+                sent = f"Sent: {line.strip()}"
 
-                    response = f"Response: {response.decode().strip()}"
-                    command_terminal.config(text=f'{sent} \n {response}')
-                    gcode_progress = int(idx * (100 / (len([i for i in open(filename, 'r')]))))
-                    if gcode_progress < 100:
-                        progress_label.config(text=f"Progress {gcode_progress} %")
-                        progress.config(value=gcode_progress)
-                        gcode_button.config(bootstyle='success')
-                    else:
-                        progress_label.config(text=f"Idle")
-                        progress.config(value=0)
-                        command_terminal.config(text=f'idle')
-                        command_terminal_text.config(text='Run a gcode to start')
-                        gcode_button.config(bootstyle='light outline')
+                # Wait for response containing "ok"
+                response = b""
+                while b"ok" not in response:
+                    chunk = port.read(port.in_waiting or 1)
+                    if chunk:
+                        response += chunk
+
+                response = f"Response: {response.decode().strip()}"
+                command_terminal.config(text=f'{sent} \n {response}')
+                gcode_progress = int(idx * (100 / (len([i for i in open(filename, 'r')]))))
+                if gcode_progress < 100:
+                    progress_label.config(text=f"Progress {gcode_progress} %")
+                    progress.config(value=gcode_progress)
+                    gcode_button.config(bootstyle='success')
+                else:
+                    progress_label.config(text=f"Idle")
+                    progress.config(value=0)
+                    command_terminal.config(text=f'idle')
+                    command_terminal_text.config(text='Run a gcode to start')
+                    gcode_button.config(bootstyle='light outline')
 
 
 
@@ -174,6 +175,26 @@ def run_send_gcode(filename, port):
     thread = threading.Thread(target=send_gcode, args=(filename, port))
     thread.start()
     return thread
+
+def stopGcode():
+    global streaming,port
+
+    if streaming:
+
+        streaming = False
+        port.write(b"M300 S50\n")
+        port.write(b"G21/G90/G1 X0 F3500\n")
+        port.write(b"G21/G90/G1 Y0 F3500\n")
+        port.close()
+
+
+
+    else:
+        print("not streaming any file")
+
+    command_terminal.config(text='Stream Cancelled')
+    progress.config(value=0)
+    progress_label.config(text="Cancelled")
 
 
 # Main Divs
@@ -238,6 +259,8 @@ gcode_label.pack(pady=20)
 gcode_button = tb.Button(gcode_menu, text='Open File', bootstyle='light outline', command=fileSelector)
 gcode_button.pack(pady=15, fill='x')
 
+gcode_button = tb.Button(gcode_menu, text='Stop Gcode', bootstyle='light outline', command=stopGcode)
+gcode_button.pack(pady=15, fill='x')
 # ------------- Gcode Running ----------------
 # _____________ Command Panel ______________
 command_menu = tb.Button(right_side)
