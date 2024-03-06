@@ -114,10 +114,13 @@ def fileSelector():
 
 
 def send_gcode(filename, port):
+    global portname
+
     if not port.isOpen():
-        print('Starting Serial Port at ')
+        print(f'Starting Serial Port at {portname}')
         port.open()
 
+    command_terminal.config(text='Starting Gcode')
 
 
     try:
