@@ -5,9 +5,9 @@ import ttkbootstrap as tb
 
 from serial import Serial
 import serial.tools.list_ports
-from serial.serialutil import SerialException
 
-# initial Confige for Tkinter and ttkbootstrap
+
+# initial Config for Tkinter and ttkbootstrap
 root = tb.Window(themename="darkly")
 root.title("DIY CNC Control Panel")
 root.geometry('800x600')
@@ -27,8 +27,9 @@ def allPorts() -> list:
     :return: A list of all the ports that are available at the moment
     """
 
-    ports = serial.tools.list_ports.comports()
-    all_ports: list = []
+    ports = serial.tools.list_ports.comports() # Puts all the available ports in a Variable
+    all_ports: list = [] # Stores all the available Ports
+
     if len(ports) > 0:
         for port_name in ports:
             all_ports.append(port_name.name)
@@ -37,15 +38,14 @@ def allPorts() -> list:
 
 def checkPortCon():
     """
-    This Fuction Sets the Portname ,
-    Starts the serial port and
-    Checks if it is running
-
-    :return:
+    This Fuction Sets the Portname (ex: COM4) ,
+    Starts the serial port,
+    Checks if it is runnin
     """
     global portname, port
 
-    portname = ports_dropdown.get()
+    portname = ports_dropdown.get() # Gets the Currently selected item in ports_dropdown variable
+
     print(portname)
     if portname == 'No Ports Connected':
         ports_label.config(text="No Ports Selected")
@@ -105,16 +105,21 @@ def fileSelector():
         if len(gcode) <= 0:
             return
         else:
+            gcode_button.state(["disabled"])
             print("Starting Streaming")
             streaming = True
             print("Staring Serial Event")
             run_send_gcode(filename, port)
+            gcode_button.state(["!disabled"])
 
 
 def send_gcode(filename, port):
     if not port.isOpen():
         print('Starting Serial Port at ')
         port.open()
+
+    if not streaming:
+        return
 
     try:
         # Discard the first three lines from the serial port
@@ -182,8 +187,8 @@ bottom_side = tb.Label()
 bottom_side.pack(side='bottom')
 
 # ------------- Port Selection and Connections ----------------
-Main_menu = tb.Frame(left_side,bootstyle='danger inverse')
-Main_menu.pack(padx=10)
+Main_menu = tb.Frame(left_side)
+Main_menu.pack(ipadx=10)
 
 ports_label = tb.Label(Main_menu, text="Select Port from the box below", font=('Terminal', 14), bootstyle='danger')
 ports_label.pack(pady=10)
@@ -202,13 +207,13 @@ def update_ports():
 
 # Port selection panel
 ports_dropdown = tb.Combobox(Main_menu, bootstyle="info", values=ports)
-ports_dropdown.pack(side="left")
+ports_dropdown.pack(padx=15,side="left")
 ports_dropdown.current(0)
 
 update_ports()
 
-port_connect = tb.Button(Main_menu, text="connect", command=checkPortCon, bootstyle='primary')
-port_connect.pack(side='right')
+port_connect = tb.Button(Main_menu, text="connect", command=checkPortCon, bootstyle='info')
+port_connect.pack(side='left')
 # ------------- Port Selection and Connections ----------------
 
 # ------------- Testing ----------------
